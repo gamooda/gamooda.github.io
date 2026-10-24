@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Архив стримов CRYPTO</title>
+    <link rel="icon" id="favicon" href="emoji/emoji0.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/index.css">
+    <script>
+        try {
+            if (sessionStorage.getItem('cryptoIntroShown') === '1') {
+                document.documentElement.classList.add('intro-skip');
+            }
+        } catch (e) {}
+    </script>
+</head>
+<body>
+<div class="falling-emoji-container" id="emojiContainer"></div>
+<div id="loader-screen">
+    <div class="stripe-overlay"></div>
+    <div class="gif-grid" id="gifGrid"></div>
+    <div class="spinner">
+        <img class="emoji-img" id="emojiImg" alt="">
+    </div>
+    <div class="loading-text" id="loadingText"></div>
+</div>
+<div class="container" id="mainContent" style="display: none;">
+    <header>
+        <h1>Архив стримов CRYPTO</h1>
+        <p class="subtitle">Выберите год для просмотра доступных записей</p>
+    </header>
+    <div class="years-grid" id="yearsGrid"></div>
+    <div class="random-moment">
+        <h2 class="random-moment-title">Яркие моменты</h2>
+        <div class="random-moment-container" id="randomMoment"></div>
+        <button class="show-all-btn" id="showAllBtn">Показать яркие моменты</button>
+    </div>
+    <div class="all-moments" id="allMoments">
+        <h2 class="all-moments-title">Все моменты</h2>
+        <div class="media-categories">
+            <button class="category-btn active" data-category="all">Все</button>
+            <button class="category-btn" data-category="image">Изображения</button>
+            <button class="category-btn" data-category="video">Видео</button>
+        </div>
+        <div class="moments-grid" id="momentsGrid"></div>
+        <button class="back-to-random" id="backToRandom">Вернуться</button>
+    </div>
+</div>
+<div class="footer" id="footer">
+    <div class="social-container">
+        <a href="https://t.me/CryptoHLX" class="social-icon" target="_blank" rel="noopener noreferrer">
+            <img src="assets/avatars/telegram_avatar.webp" class="avatar-img" alt="">
+            <div class="platform-badge">
+                <img src="assets/avatars/telegram.webp" alt="">
+            </div>
+        </a>
+        <a href="https://www.youtube.com/@crypto2102" class="social-icon" target="_blank" rel="noopener noreferrer">
+            <img src="assets/avatars/youtube_avatar.webp" class="avatar-img" alt="">
+            <div class="platform-badge">
+                <img src="assets/avatars/youtube.webp" alt="">
+            </div>
+        </a>
+        <a href="https://discord.gg/HgDNU5rBZE" class="social-icon" target="_blank" rel="noopener noreferrer">
+            <img src="assets/avatars/discord_avatar.webp" class="avatar-img" alt="" onerror="this.onerror=null;this.src='assets/avatars/discord_avatar.png'">
+            <div class="platform-badge">
+                <img src="assets/avatars/discord.webp" alt="">
+            </div>
+        </a>
+    </div>
+</div>
+<div class="media-player-overlay" id="mediaPlayerOverlay">
+    <button class="close-player" id="closePlayerBtn" title="Закрыть"></button>
+    <button class="nav-arrow left" id="prevBtn" title="Предыдущее"></button>
+    <button class="nav-arrow right" id="nextBtn" title="Следующее"></button>
+    
+    <div class="player-frame" id="playerFrame">
+        <div class="media-player-container" id="mediaPlayerContainer">
+            <div class="media-player" id="mediaPlayer"></div>
+            <div class="media-controls" id="mediaControls">
+                <button class="ctrl-btn play-btn" id="playPauseBtn" title="Смотреть"></button>
+                <div class="volume-control">
+                    <button class="ctrl-btn" id="muteBtn" title="Выключить звук"></button>
+                    <div class="volume-slider" id="volumeSlider">
+                        <div class="volume-level" id="volumeLevel"></div>
+                        <div class="volume-thumb" id="volumeThumb"></div>
+                    </div>
+                </div>
+                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-buffer" id="progressBuffer"></div>
+                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-thumb" id="progressThumb"></div>
+                    <div class="scrub-tip" id="scrubTip">0:00</div>
+                </div>
+                <button class="ctrl-btn" id="fullscreenBtn" title="На весь экран"></button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mini-menu" id="miniMenu">
+        <div class="mini-menu-item" id="miniPrev">
+            <div class="mini-thumb"></div>
+            <div class="mini-title"></div>
+        </div>
+        <div class="mini-menu-item active" id="miniCurrent">
+            <div class="mini-thumb"></div>
+            <div class="mini-title"></div>
+        </div>
+        <div class="mini-menu-item" id="miniNext">
+            <div class="mini-thumb"></div>
+            <div class="mini-title"></div>
+        </div>
+    </div>
+</div>
+
+<script src="js/index.js"></script>
+</body>
+</html>

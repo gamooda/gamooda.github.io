@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Все стримы | Архив</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link id="favicon" rel="icon" type="image/webp" href="emoji/emoji46.webp">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="falling-emoji-container" id="emoji-container"></div>
+    <div class="container">
+        <header>
+            <button class="back-button" onclick="goBack()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <h1>Все стримы</h1>
+        </header>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Поиск по названию, номеру или дате..." id="searchInput">
+        </div>
+        <div class="filters">
+            <button class="year-btn active" data-year="all">Все годы</button>
+            <button class="year-btn" data-year="2022">2022</button>
+            <button class="year-btn" data-year="2023">2023</button>
+            <button class="year-btn" data-year="2024">2024</button>
+            <button class="year-btn" data-year="2025">2025</button>
+            <button class="year-btn" data-year="2026">2026</button>
+        </div>
+        <div class="filters" style="margin-top: -1rem;">
+            <button class="filter-btn active" data-filter="all">Все стримы</button>
+            <button class="filter-btn" data-filter="available">Доступные</button>
+            <button class="filter-btn" data-filter="unavailable">Недоступные</button>
+        </div>
+        <div class="streams-grid" id="streamsContainer">
+            <div class="loading">Загрузка данных о стримах...</div>
+        </div>
+    </div>
+    <div class="video-modal-overlay" id="videoModalOverlay">
+        <button class="video-modal-close" id="closeVideoModal">&times;</button>
+        <div class="video-modal-container">
+            <iframe id="youtubeIframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+    <script src="js/common.js"></script>
+    <script src="js/all.js"></script>
+</body>
+</html>
