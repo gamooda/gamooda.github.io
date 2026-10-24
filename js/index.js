@@ -127,7 +127,6 @@
     let currentVolume = 1;
     let isDraggingProgress = false;
     let isDraggingVolume = false;
-    let pendingScrubRatio = null;
     let emojiInterval = null;
     let activeEmojis = [];
     let animationFrameId = null;
@@ -523,7 +522,6 @@
             card.className = `year-card ${data.all ? 'all-card' : ''}`;
             card.setAttribute('data-year', data.year || 'all');
             card.style.animationDelay = `${0.1 + idx * 0.1}s`;
-            // Больше НЕ меняем opacity и transform в JS, чтобы не залипало при возврате назад
             card.innerHTML = `
                 <div class="year-number">${data.all ? 'ВСЕ' : data.year}</div>
                 <div class="year-counters">
@@ -814,7 +812,6 @@
         isPlaying = false;
         isDraggingProgress = false;
         isDraggingVolume = false;
-        pendingScrubRatio = null;
         progressBar.style.width = '0%';
         progressThumb.style.left = '0%';
         progressBuffer.style.width = '0%';
@@ -823,7 +820,6 @@
         timeDisplay.textContent = '0:00 / 0:00';
         setPlayIcon('play');
         stopProgressTicker();
-        mediaPlayerDiv.classList.remove('is-seeking', 'video-ended');
     }
 
     function releasePlayerVideo() {
@@ -859,27 +855,10 @@
             updateBufferBar();
             syncPlayIcon();
         });
-        video.addEventListener('durationchange', () => {
-            updateProgressBar();
-            updateBufferBar();
-        });
         video.addEventListener('progress', updateBufferBar);
-        video.addEventListener('seeking', () => {
-            mediaPlayerDiv.classList.add('is-seeking');
-        });
         video.addEventListener('seeked', () => {
-            mediaPlayerDiv.classList.remove('is-seeking');
             updateProgressBar();
-            updateBufferBar();
             checkEndState(video);
-            if (!video.paused) startProgressTicker();
-        });
-        video.addEventListener('waiting', () => {
-            mediaPlayerDiv.classList.add('is-seeking');
-        });
-        video.addEventListener('canplay', () => {
-            mediaPlayerDiv.classList.remove('is-seeking');
-            updateBufferBar();
         });
         video.addEventListener('ended', () => {
             mediaPlayerDiv.classList.add('video-ended');
@@ -1025,11 +1004,14 @@
         currentIndex = mediaFiles.findIndex(m => m.url === media.url);
         if (currentIndex === -1) currentIndex = 0;
         resetPlayerState();
-        const placeholder = document.createElement('div');
-        placeholder.className = 'loading-placeholder';
-        placeholder.innerHTML = '<div class="loading-spinner"></div>';
-        mediaPlayerDiv.appendChild(placeholder);
+
+        // Плашка загрузки теперь ТОЛЬКО для картинок, чтобы не было двойных спиннеров на видео
         if (media.type === 'image') {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'loading-placeholder';
+            placeholder.innerHTML = '<div class="loading-spinner"></div>';
+            mediaPlayerDiv.appendChild(placeholder);
+
             const img = document.createElement('img');
             img.src = media.url;
             img.alt = media.caption;
@@ -1052,12 +1034,13 @@
             video.preload = 'auto';
             video.volume = currentVolume;
             video.muted = isMuted;
-            video.onloadeddata = () => placeholder.remove();
             mediaPlayerDiv.appendChild(video);
+
             centerPlayEl = document.createElement('div');
             centerPlayEl.className = 'center-play';
             centerPlayEl.innerHTML = icon('play');
             mediaPlayerDiv.appendChild(centerPlayEl);
+
             createEndScreen();
             document.getElementById('mediaControls').style.display = 'flex';
             currentVideo = video;
@@ -1085,47 +1068,24 @@
         return e.clientX;
     }
 
-    function ratioFromEvent(e, el) {
-        const rect = el.getBoundingClientRect();
-        if (!rect.width) return 0;
-        return Math.max(0, Math.min(1, (getClientX(e) - rect.left) / rect.width));
-    }
-
-    function applyScrubUI(ratio, duration) {
-        progressBar.style.width = `${ratio * 100}%`;
-        progressThumb.style.left = `${ratio * 100}%`;
-        scrubTip.style.left = `${ratio * 100}%`;
-        scrubTip.textContent = formatTime(ratio * duration);
-        if (isFinite(duration) && duration > 0) {
-            timeDisplay.textContent = `${formatTime(ratio * duration)} / ${formatTime(duration)}`;
-        }
-    }
-
-    function seekVideoToRatio(ratio) {
-        const video = currentVideo;
-        if (!video || !isFinite(video.duration) || video.duration <= 0) return;
-        const target = Math.max(0, Math.min(video.duration, ratio * video.duration));
-        try {
-            if (typeof video.fastSeek === 'function') {
-                video.fastSeek(target);
-            } else {
-                video.currentTime = target;
-            }
-        } catch (err) {
-            try { video.currentTime = target; } catch (e2) {}
-        }
-        applyScrubUI(ratio, video.duration);
-        checkEndState(video);
-    }
-
     function handleScrubMove(e) {
         if (!isDraggingProgress) return;
         if (e.cancelable) e.preventDefault();
+        
         const video = currentVideo;
         if (!video || !isFinite(video.duration) || video.duration <= 0) return;
-        const ratio = ratioFromEvent(e, progressContainer);
-        pendingScrubRatio = ratio;
-        applyScrubUI(ratio, video.duration);
+        
+        const rect = progressContainer.getBoundingClientRect();
+        const clientX = getClientX(e);
+        let ratio = (clientX - rect.left) / rect.width;
+        ratio = Math.max(0, Math.min(1, ratio));
+        
+        video.currentTime = ratio * video.duration;
+        progressBar.style.width = `${ratio * 100}%`;
+        progressThumb.style.left = `${ratio * 100}%`;
+        timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+        scrubTip.style.left = `${ratio * 100}%`;
+        scrubTip.textContent = formatTime(video.currentTime);
     }
 
     function stopScrub() {
@@ -1136,20 +1096,14 @@
         window.removeEventListener('mouseup', stopScrub);
         window.removeEventListener('touchmove', handleScrubMove);
         window.removeEventListener('touchend', stopScrub);
-        if (pendingScrubRatio !== null) {
-            seekVideoToRatio(pendingScrubRatio);
-            pendingScrubRatio = null;
-        } else {
-            updateProgressBar();
-            if (currentVideo) checkEndState(currentVideo);
-        }
+        updateProgressBar();
+        if (currentVideo) checkEndState(currentVideo);
     }
 
     progressContainer.addEventListener('mousedown', (e) => {
         if (!currentVideo) return;
         e.preventDefault();
         isDraggingProgress = true;
-        pendingScrubRatio = null;
         progressContainer.classList.add('dragging');
         handleScrubMove(e);
         window.addEventListener('mousemove', handleScrubMove);
@@ -1159,7 +1113,6 @@
     progressContainer.addEventListener('touchstart', (e) => {
         if (!currentVideo) return;
         isDraggingProgress = true;
-        pendingScrubRatio = null;
         progressContainer.classList.add('dragging');
         handleScrubMove(e);
         window.addEventListener('touchmove', handleScrubMove, { passive: false });
@@ -1168,7 +1121,9 @@
 
     progressContainer.addEventListener('mousemove', (e) => {
         if (!currentVideo || isDraggingProgress || !isFinite(currentVideo.duration) || currentVideo.duration <= 0) return;
-        const ratio = ratioFromEvent(e, progressContainer);
+        const rect = progressContainer.getBoundingClientRect();
+        let ratio = (e.clientX - rect.left) / rect.width;
+        ratio = Math.max(0, Math.min(1, ratio));
         scrubTip.style.left = `${ratio * 100}%`;
         scrubTip.textContent = formatTime(ratio * currentVideo.duration);
     });
@@ -1178,7 +1133,12 @@
         if (e.cancelable) e.preventDefault();
         const video = currentVideo;
         if (!video) return;
-        const ratio = ratioFromEvent(e, volumeSlider);
+        
+        const rect = volumeSlider.getBoundingClientRect();
+        const clientX = getClientX(e);
+        let ratio = (clientX - rect.left) / rect.width;
+        ratio = Math.max(0, Math.min(1, ratio));
+        
         currentVolume = ratio;
         isMuted = ratio === 0;
         video.volume = ratio;
